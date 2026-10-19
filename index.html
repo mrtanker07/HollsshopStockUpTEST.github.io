@@ -731,7 +731,8 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;min-width:0}
 .sxc:hover{color:var(--tx)}
 .sx>input:placeholder-shown~.sxc{display:none}
 .sx>input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
-.rank{display:flex;gap:2px;flex:none}
+.rank{display:flex;gap:2px;flex:none;margin-left:auto}
+.cd.rw>span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
 .rank button{min-height:0!important;padding:4px!important}
 </style>
 </head>
@@ -2582,6 +2583,13 @@ function catsHtml() {
   }).join('') + '</div>';
 }
 
+function matsHtml() {
+  var list = matNames();
+  if (!list.length) return '';
+  return '<div class="chips cats fl-d mats"><button class="' + (S.mat ? '' : 'on') + '" data-a="mat" data-k="">Все материалы</button>' + list.map(function (c) {
+    return '<button class="' + (S.mat === c ? 'on' : '') + '" data-a="mat" data-k="' + esc(c) + '">' + esc(c) + '</button>';
+  }).join('') + '</div>';
+}
 function productsPage() {
   var stat = STATS.map(function (c) {
     return '<button class="' + (S.tab === c[0] ? 'on' : '') + '" data-a="tab" data-v="' + c[0] + '">' + c[1] + '</button>';
@@ -2590,10 +2598,9 @@ function productsPage() {
     '<button class="pri" data-a="newP">Новый товар</button></div></div>' +
     '<input id="q" placeholder="Введите название или артикул для поиска" value="' + esc(S.q) + '" style="margin-top:10px">' +
     '<div class="fl-d"><select id="srt" aria-label="Сортировка">' + opts(SORTS, S.sort) + '</select>' +
-    '<select id="mat" aria-label="Материал"><option value="">Все материалы</option>' + opts(matNames().map(function (x) { return [x, x]; }), S.mat) + '</select>' +
     '<div class="chips" style="margin-top:0">' + stat + '<button class="ghost dg rt" data-a="resetF"' + (filtOn() ? '' : ' disabled') + '>Сбросить</button></div></div>' +
     '<div class="mf"><button data-a="filt">Фильтр' + (filtOn() ? ' ●' : '') + '</button></div>' + filtSummary() +
-    catsHtml() +
+    catsHtml() + matsHtml() +
     '<div id="plist">' + plist() + '</div>';
 }
 
@@ -3104,12 +3111,14 @@ function filtDlg() {
   var d = document.createElement('dialog');
   d.paint = function () {
     d.innerHTML = '<h3>Фильтр</h3><label>Сортировка</label><select id="srt2">' + opts(SORTS, S.sort) + '</select>' +
-      '<label>Материал</label><select id="mat2"><option value="">Все материалы</option>' + opts(matNames().map(function (x) { return [x, x]; }), S.mat) + '</select>' +
       '<label>Показывать</label><div class="chips" style="margin-top:0">' + STATS.map(function (c) {
         return '<button class="' + (S.tab === c[0] ? 'on' : '') + '" data-a="ftab" data-v="' + c[0] + '">' + c[1] + '</button>';
       }).join('') + '</div>' +
       '<label>Категория</label><div class="chips" style="margin-top:0"><button class="' + (S.cat ? '' : 'on') + '" data-a="fcat" data-k="">Все категории</button>' + catNames().map(function (c) {
         return '<button class="' + (S.cat === c ? 'on' : '') + '" data-a="fcat" data-k="' + esc(c) + '">' + esc(c) + '</button>';
+      }).join('') + '</div>' +
+      '<label>Материал</label><div class="chips" style="margin-top:0"><button class="' + (S.mat ? '' : 'on') + '" data-a="fmat" data-k="">Все материалы</button>' + matNames().map(function (c) {
+        return '<button class="' + (S.mat === c ? 'on' : '') + '" data-a="fmat" data-k="' + esc(c) + '">' + esc(c) + '</button>';
       }).join('') + '</div>' +
       '<div class="rw" style="margin-top:14px;justify-content:space-between"><button class="ghost dg" data-a="resetF"' + (filtOn() ? '' : ' disabled') + '>Сбросить</button><button class="pri" data-c>Готово</button></div>';
     d.querySelector('[data-c]').onclick = function () { d.close(); };
@@ -3416,6 +3425,8 @@ var A = {
     render(); if (S.fd) S.fd.paint();
   },
   fcat: function (d) { S.cat = S.cat === d.k ? '' : d.k; render(); if (S.fd) S.fd.paint(); },
+  fmat: function (d) { S.mat = S.mat === d.k ? '' : d.k; render(); if (S.fd) S.fd.paint(); },
+  mat: function (d) { S.mat = S.mat === d.k ? '' : d.k; render(); },
   cat: function (d) { S.cat = S.cat === d.k ? '' : d.k; render(); },
   filt: function () { filtDlg(); },
   newP: function () { prodForm(null, productsDone); },
@@ -4005,7 +4016,6 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('change', function (e) {
-  if (e.target.id === 'mat' || e.target.id === 'mat2') { S.mat = e.target.value; render(); if (S.fd) S.fd.paint(); }
 });
 document.addEventListener('change', function (e) {
   if (e.target.id !== 'srt' && e.target.id !== 'srt2') return;
@@ -4048,7 +4058,7 @@ sxEnhance(document.body);
   function hide() { if (z) { z.remove(); z = null; } }
   function place(e) {
     if (!z) return; var w = 220, x = e.clientX + 18, y = e.clientY - w / 2, dg = z.host || document.querySelector('dialog[open].pk1, dialog[open]');
-    if (dg) { var r = dg.getBoundingClientRect(); x = r.right + 12; if (x + w > innerWidth - 8) x = r.left - w - 12; }
+    if (dg) { var r = dg.getBoundingClientRect(); x = r.left - w - 12; if (x < 8) x = r.right + 12; }
     else if (x + w > innerWidth - 8) x = e.clientX - w - 18;
     y = Math.max(8, Math.min(y, innerHeight - w - 8)); z.style.left = x + 'px'; z.style.top = y + 'px';
   }
