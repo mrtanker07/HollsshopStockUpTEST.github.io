@@ -611,6 +611,8 @@ main>.rg{grid-template-columns:repeat(3,minmax(0,1fr))}
 dialog .pc-photo{flex:none}
 #pph{width:min(240px,60vw);height:min(240px,60vw);border-radius:12px}
 #pph svg{width:48px;height:48px}
+.sk{display:none}
+@media(max-width:1099px){#pph{width:112px;height:112px;border-radius:10px}#pph svg{width:36px;height:36px}.pbt{flex-direction:column;align-items:stretch;gap:8px}.pbt button{min-width:150px}}
 .ovh .mu,.ovh b{display:block}
 @media(max-width:1099px){
 .ovh{grid-template-columns:auto auto auto;justify-content:space-between}
@@ -676,6 +678,8 @@ dialog.pk1{width:min(94vw,520px)}
 .p1t small{color:var(--mu);font-size:12px}
 @media(max-width:1099px){
 .pc.single .stock-row .qty{grid-column:2}
+.pc.single .stock-row .sk{display:block;grid-column:1;justify-self:start;align-self:center;font-size:13px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pc.single .msk{display:none}
 .pc.single .stock-row .bdg{grid-column:3}
 .hmv{display:none}
 .vm{display:block;font-size:11px;color:var(--mu);margin-top:1px}
@@ -2519,11 +2523,11 @@ function cardHtml(p) {
   var photo = '<div class="pc-photo"' + (p.archived && !p.photo ? '' : ' role="button" tabindex="0" aria-label="' + (p.photo ? 'Увеличить фото' : 'Добавить фото') + '" data-a="' + (p.photo ? 'zoomP' : 'addPhoto') + '" data-id="' + esc(p.id) + '"') + '>' +
     (p.photo ? '<img src="' + esc(p.photo) + '" alt="">' : ico('photo')) + '</div>';
   var head = photo + '<div class="pc-main"><p class="pc-name" title="' + esc(p.name) + '">' + esc(p.name) + '</p>' +
-    (meta ? '<p class="pc-meta">' + esc(meta) + '</p>' : '') + '</div>';
+    (meta ? '<p class="pc-meta">' + (single && p.sku ? esc([p.category, p.material].filter(Boolean).join(' · ')) + '<span class="msk">' + (p.category || p.material ? ' · ' : '') + esc('#' + p.sku) + '</span>' : esc(meta)) + '</p>' : '') + '</div>';
   var m = menu(mn, p.id, ico('dots')), price = priceHtml(p), sg = function (c, x) { return '<div class="sg ' + c + '">' + x + '</div>'; };
   if (single) {
     var q = vs.length ? vs[0].stock : 0;
-    return '<div class="pc single"><div class="pc-head">' + head + sg('sp', price) + '<div class="stock-row">' + sg('sq', qtyBox(q)) + sg('ss', badge(q, p.min)) + '</div>' + sg('so', m) + '</div></div>';
+    return '<div class="pc single"><div class="pc-head">' + head + sg('sp', price) + '<div class="stock-row">' + (p.sku ? '<span class="sk" title="Артикул">#' + esc(p.sku) + '</span>' : '') + sg('sq', qtyBox(q)) + sg('ss', badge(q, p.min)) + '</div>' + sg('so', m) + '</div></div>';
   }
   var tot = vs.reduce(function (a, v) { return a + v.stock; }, 0);
   var nN = vs.filter(function (v) { return v.stock === 0; }).length;
