@@ -727,7 +727,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;min-width:0}
 .sx{position:relative;display:block}
 .psf>.sx,.pks>.sx{flex:1;min-width:0}
 .sx>input{width:100%;padding-right:34px;box-sizing:border-box}
-.sxc{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;min-height:0!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--mu);cursor:pointer}
+.sxc{position:absolute;right:4px;top:0;bottom:0;margin:auto 0!important;transform:none!important;transition:none!important;width:28px;height:28px;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--mu);cursor:pointer}
 .sxc:hover{color:var(--tx)}
 .sx>input:placeholder-shown~.sxc{display:none}
 .sx>input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
@@ -774,11 +774,17 @@ function sxEnhance(root) {
   if (root.matches && root.matches(SXSEL)) sxWrap(root);
   root.querySelectorAll(SXSEL).forEach(sxWrap);
 }
-document.addEventListener('click', function (e) {
-  var b = e.target.closest && e.target.closest('.sxc'); if (!b) return;
-  var i = b.parentNode.querySelector('input'); if (!i) return;
-  i.value = ''; i.dispatchEvent(new Event('input', {bubbles: true})); i.focus();
-});
+// очистка срабатывает сразу при нажатии (до потери фокуса и перерисовки списка), поэтому работает с первого раза
+function sxClear(e) {
+  var b = e.target.closest && e.target.closest('.sxc'); if (!b) return false;
+  e.preventDefault();
+  var i = b.parentNode.querySelector('input'); if (!i) return true;
+  if (i.value) { i.value = ''; i.dispatchEvent(new Event('input', {bubbles: true})); }
+  i.focus(); return true;
+}
+document.addEventListener('pointerdown', sxClear, true);
+document.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('.sxc')) e.preventDefault(); }, true);
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.sxc')) { e.preventDefault(); e.stopPropagation(); } }, true);
 new MutationObserver(function (recs) { recs.forEach(function (r) { r.addedNodes.forEach(sxEnhance); }); }).observe(document.documentElement, {childList: true, subtree: true});
 function themeNow() {
   return document.documentElement.getAttribute('data-theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -4057,14 +4063,14 @@ sxEnhance(document.body);
   if (!fine) return;
   function hide() { if (z) { z.remove(); z = null; } }
   function place(e) {
-    if (!z) return; var w = 220, x = e.clientX + 18, y = e.clientY - w / 2, dg = z.host || document.querySelector('dialog[open].pk1, dialog[open]');
-    if (dg) { var r = dg.getBoundingClientRect(); x = r.left - w - 12; if (x < 8) x = r.right + 12; }
+    if (!z) return; var w = 220, x = e.clientX + 18, y = e.clientY - w / 2, dg = z.dg;
+    if (dg) { var r = dg.getBoundingClientRect(); x = r.left - w - 6; if (x < 8) x = r.right + 6; }
     else if (x + w > innerWidth - 8) x = e.clientX - w - 18;
     y = Math.max(8, Math.min(y, innerHeight - w - 8)); z.style.left = x + 'px'; z.style.top = y + 'px';
   }
   document.addEventListener('mouseover', function (e) {
     var i = e.target.closest && e.target.closest('.p1p img'); if (!i) return;
-    hide(); z = document.createElement('div'); z.className = 'hz'; z.innerHTML = '<img alt="">'; z.firstChild.src = i.src;
+    hide(); z = document.createElement('div'); z.className = 'hz'; z.dg = i.closest('dialog'); z.innerHTML = '<img alt="">'; z.firstChild.src = i.src;
     z.setAttribute('popover', 'manual'); document.body.appendChild(z); try { z.showPopover(); } catch (x) {} place(e);
   });
   document.addEventListener('mousemove', place);
